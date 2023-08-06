@@ -151,7 +151,12 @@ public class ControlDeStockFrame extends JFrame {
 
         botonModificar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                modificar();
+                try {
+					modificar();
+				} catch (SQLException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
                 limpiarTabla();
                 cargarTabla();
             }
@@ -176,7 +181,7 @@ public class ControlDeStockFrame extends JFrame {
         return tabla.getSelectedRowCount() == 0 || tabla.getSelectedColumnCount() == 0;
     }
 
-    private void modificar() {
+    private void modificar() throws SQLException {
         if (tieneFilaElegida()) {
             JOptionPane.showMessageDialog(this, "Por favor, elije un item");
             return;
@@ -184,14 +189,35 @@ public class ControlDeStockFrame extends JFrame {
 
         Optional.ofNullable(modelo.getValueAt(tabla.getSelectedRow(), tabla.getSelectedColumn()))
                 .ifPresentOrElse(fila -> {
-                    Integer id = (Integer) modelo.getValueAt(tabla.getSelectedRow(), 0);
+                    Integer id = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(), 0).toString());
                     String nombre = (String) modelo.getValueAt(tabla.getSelectedRow(), 1);
                     String descripcion = (String) modelo.getValueAt(tabla.getSelectedRow(), 2);
+                    Integer cantidad = Integer.valueOf(modelo.getValueAt(tabla.getSelectedRow(),3).toString());
 
-                    this.productoController.modificar(nombre, descripcion, id);
-                }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
+                    
+                    int filasModificadas;
+                    
+                    
+                    try {
+                    	
+					filasModificadas =	this.productoController.modificar(nombre, descripcion,cantidad, id);
+					
+                    } catch (SQLException e) {
+	
+						e.printStackTrace();
+						throw new RuntimeException(e);
+					}
+                    
+                JOptionPane.showMessageDialog(this, String.format("%d item modificado con éxito!", filasModificadas));
+        }, () -> JOptionPane.showMessageDialog(this, "Por favor, elije un item"));
     }
 
+    
+
+    
+    
+    
+    
     private void eliminar() {
         if (tieneFilaElegida()) {
             JOptionPane.showMessageDialog(this, "Por favor, elije un item");
