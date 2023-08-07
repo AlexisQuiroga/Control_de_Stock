@@ -18,12 +18,15 @@ public class ProductoController {
 
 		Connection con = new ConnectionFactory().recuperaConexion();
 		
-		PreparedStatement statement = con.prepareStatement("UPDATE PRODUCTO SET " 
+		try(con){
+		
+		final PreparedStatement statement = con.prepareStatement("UPDATE PRODUCTO SET " 
 				+ "NOMBRE = ? "
 				+ ", DESCRIPCION = ? "
 				+ ", CANTIDAD = ? "
 				+ " WHERE ID = ?");
 		
+		try(statement){
 		
         statement.setString(1, nombre);
 		statement.setString(2, descripcion);
@@ -36,27 +39,33 @@ public class ProductoController {
 		
 		int updateCount = statement.getUpdateCount();		
 		
-		con.close();
-		
-		return updateCount;
+		return updateCount;}
+		}
 	}
 
 	public int eliminar(Integer id) throws SQLException  {
-		Connection con = new ConnectionFactory().recuperaConexion();
+		final Connection con = new ConnectionFactory().recuperaConexion();
 		
-		PreparedStatement statement = con.prepareStatement("DELETE FROM PRODUCTO WHERE ID = ?" );
+		try(con){
+		final PreparedStatement statement = con.prepareStatement("DELETE FROM PRODUCTO WHERE ID = ?" );
+		
+		try (statement){
 		statement.setInt(1, id);
 		statement.execute();
 		
 		return statement.getUpdateCount();
-		
+			}	
+		}
 	}
 
 	public List<Map<String, String>> listar() throws SQLException {
-		Connection con = new ConnectionFactory().recuperaConexion();
+		final Connection con = new ConnectionFactory().recuperaConexion();
 		
-		PreparedStatement statement = con.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM PRODUCTO");
+		try(con){
 		
+		final PreparedStatement statement = con.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM PRODUCTO");
+		
+		try(statement){
 		statement.execute();
 		
 		ResultSet resultSet = statement.getResultSet();
@@ -72,13 +81,12 @@ public class ProductoController {
 			
 			
 			resultado.add(fila);
-			
-		};
-	
-		con.close();
 		
+		};
 		
 		return  resultado;
+		}
+		}
 	}
 
     public void guardar(Map<String, String> producto) throws SQLException {
@@ -89,26 +97,28 @@ public class ProductoController {
     	Integer maximoCantidad = 50;
     	
     	
-    	Connection con = new ConnectionFactory().recuperaConexion();
-    	con.setAutoCommit(false);
+    final Connection con = new ConnectionFactory().recuperaConexion();
+    	try(con){
+    		con.setAutoCommit(false);}
     	
-    	PreparedStatement statement = con.prepareStatement("INSERT INTO PRODUCTO (nombre, descripcion, cantidad)" 
+    	PreparedStatement statement = con.prepareStatement(
+    	"INSERT INTO PRODUCTO (nombre, descripcion, cantidad)" 
     	+ "VALUES(?,?,?)", Statement.RETURN_GENERATED_KEYS);
     	
+    	try(statement){
     	
-    	try {
-			
-		
-    	do {
-    	int cantidadParaGuardar = Math.min(cantidad, maximoCantidad);
+    		do {
+    			int cantidadParaGuardar = Math.min(cantidad, maximoCantidad);
     	
-		ejecutaRegistro(nombre, descripcion, cantidadParaGuardar, statement);
+    			ejecutaRegistro(nombre, descripcion, cantidadParaGuardar, statement);
 		
-		cantidad -= maximoCantidad;
+    			cantidad -= maximoCantidad;
 		
 		
-    	}while(cantidad > 0);
+    		}while(cantidad > 0);
+    		
 		//Esta para guardar los items agregados siempre y cuando sea mayor a cero el numero de cantidad
+    	
     	con.commit();
     	System.out.println("COMMIT");
     	
@@ -119,30 +129,41 @@ public class ProductoController {
     		con.rollback();
     		
     		System.out.println("ROLLBACK");
-		}
+    	}
     	
-    	statement.close();
-    	con.close();
+    }
     	
-	}
 
-	private void ejecutaRegistro(String nombre, String descripcion, Integer cantidad,PreparedStatement statement)
+
+	private void ejecutaRegistro(String nombre, String descripcion, Integer cantidad, PreparedStatement statement)
 			throws SQLException {
 		
 		statement.setString(1, nombre);
     	statement.setString(2, descripcion);
 		statement.setInt(3, cantidad);
     	
-     	
 		statement.execute();
+    	/* EL try-with-recources se aplica para hacer el codigo aparte de mas corto 
+		nos ayuda a cerrar las aperturas que venimos haciendo en vez de poner ".close()" y en algun caso
+		 olvidarnos que se debia poner para no correr riesgos. */
+		
+		
+		// JAVA 7v try-with-resources
+		
+	/*	try(ResultSet resultSet1 = statement.getGeneratedKeys();){
+				while(resultSet1.next()) {
+						System.out.println(String.format("Fue incertado el producto de ID %d" ,
+								resultSet.getInt(1))); */   		
+
+		//JAVA 9v try-with-resources
+		
+    	final ResultSet resultSet = statement.getGeneratedKeys();
     	
-    	ResultSet resultSet = statement.getGeneratedKeys();
-    	
-    	while(resultSet.next()) {
-    		System.out.println(String.format("Fue incertado el producto de ID %d" , resultSet.getInt(1)));
-    		
-    		
+    	try(resultSet){
+			while(resultSet.next()) {
+					System.out.println(String.format("Fue incertado el producto de ID %d" ,
+							resultSet.getInt(1)));
+			}	
     	}
 	}
-
 }
