@@ -83,13 +83,55 @@ public class ProductoController {
 
     public void guardar(Map<String, String> producto) throws SQLException {
 		
+    	String nombre = producto.get("NOMBRE");
+    	String descripcion = producto.get("DESCRIPCION");
+    	Integer cantidad = Integer.valueOf(producto.get("CANTIDAD"));
+    	Integer maximoCantidad = 50;
+    	
+    	
     	Connection con = new ConnectionFactory().recuperaConexion();
+    	con.setAutoCommit(false);
+    	
     	PreparedStatement statement = con.prepareStatement("INSERT INTO PRODUCTO (nombre, descripcion, cantidad)" 
     	+ "VALUES(?,?,?)", Statement.RETURN_GENERATED_KEYS);
     	
-    	statement.setString(1, producto.get("NOMBRE"));
-    	statement.setString(2, producto.get("DESCRIPCION"));
-    	statement.setInt(3, Integer.valueOf(producto.get("CANTIDAD")));
+    	
+    	try {
+			
+		
+    	do {
+    	int cantidadParaGuardar = Math.min(cantidad, maximoCantidad);
+    	
+		ejecutaRegistro(nombre, descripcion, cantidadParaGuardar, statement);
+		
+		cantidad -= maximoCantidad;
+		
+		
+    	}while(cantidad > 0);
+		//Esta para guardar los items agregados siempre y cuando sea mayor a cero el numero de cantidad
+    	con.commit();
+    	System.out.println("COMMIT");
+    	
+    	} catch (SQLException e) {
+    		//Está para que cuando ocurra un error no guarde nada. Es decir
+    		// la transaccion o guarda todo o no guarda nada.
+    		
+    		con.rollback();
+    		
+    		System.out.println("ROLLBACK");
+		}
+    	
+    	statement.close();
+    	con.close();
+    	
+	}
+
+	private void ejecutaRegistro(String nombre, String descripcion, Integer cantidad,PreparedStatement statement)
+			throws SQLException {
+		
+		statement.setString(1, nombre);
+    	statement.setString(2, descripcion);
+		statement.setInt(3, cantidad);
     	
      	
 		statement.execute();
@@ -101,7 +143,6 @@ public class ProductoController {
     		
     		
     	}
-    	
 	}
 
 }
