@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alura.jdbc.factory.ConnectionFactory;
+import com.alura.jdbc.modelo.Producto;
 
 public class ProductoController {
 
@@ -90,15 +91,8 @@ public class ProductoController {
 		}
 	}
 
-    public void guardar(Map<String, String> producto) throws SQLException {
-		
-    	String nombre = producto.get("NOMBRE");
-    	String descripcion = producto.get("DESCRIPCION");
-    	Integer cantidad = Integer.valueOf(producto.get("CANTIDAD"));
-    	Integer maximoCantidad = 50;
-    	
-    	
-    final Connection con = new ConnectionFactory().recuperaConexion();
+    public void guardar(Producto producto) throws SQLException {
+    	final Connection con = new ConnectionFactory().recuperaConexion();
     
     	try (con){
     		con.setAutoCommit(false);
@@ -109,19 +103,12 @@ public class ProductoController {
     	
     	try (statement){
     	
-    		do {
-    			int cantidadParaGuardar = Math.min(cantidad, maximoCantidad);
-    	
-    			ejecutaRegistro(nombre, descripcion, cantidadParaGuardar, statement);
+    	ejecutaRegistro(producto, statement);
 		
-    			cantidad -= maximoCantidad;
-		
-		
-    		}while(cantidad > 0);
-    		
-		//Esta para guardar los items agregados siempre y cuando sea mayor a cero el numero de cantidad
+    	//Esta para guardar los items agregados siempre y cuando sea mayor a cero el numero de cantidad
     	
     	con.commit();
+
     	System.out.println("COMMIT");
     	
     	} catch (Exception e) {
@@ -134,26 +121,22 @@ public class ProductoController {
     	}
     	
     }}
-    	
 
-
-	private void ejecutaRegistro(String nombre, String descripcion, Integer cantidad, PreparedStatement statement)
+	private void ejecutaRegistro(Producto producto, PreparedStatement statement)
 			throws SQLException {
 		
-		statement.setString(1, nombre);
-    	statement.setString(2, descripcion);
-		statement.setInt(3, cantidad);
+		statement.setString(1, producto.getNombre());
+    	statement.setString(2, producto.getDescripcion());
+		statement.setInt(3, producto.getCantidad());
     	
 		statement.execute();
-    
-		//JAVA 9v try-with-resources 
 		
     	final ResultSet resultSet = statement.getGeneratedKeys();
     	
     	try (resultSet){
 			while(resultSet.next()) {
-					System.out.println(String.format("Fue incertado el producto de ID %d" ,
-							resultSet.getInt(1)));
+				producto.setId(resultSet.getInt(1));
+					System.out.println(String.format("Fue incertado el producto %s" , producto));
 			}	
     	}
 	}
