@@ -277,8 +277,8 @@ public class ControlDeStockFrame extends JFrame {
             return;
         }
 
-        // TODO
-        var producto = new HashMap<String, String>();
+        
+       var producto = new HashMap<String, String>();
        producto.put("NOMBRE", textoNombre.getText());
        producto.put("DESCRIPCION", textoDescripcion.getText());
        producto.put("CANTIDAD", String.valueOf(cantidadInt));

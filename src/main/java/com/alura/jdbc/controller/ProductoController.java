@@ -16,9 +16,9 @@ public class ProductoController {
 
 	public int modificar(String nombre, String descripcion, Integer cantidad,Integer id) throws SQLException  {
 
-		Connection con = new ConnectionFactory().recuperaConexion();
+		final Connection con = new ConnectionFactory().recuperaConexion();
 		
-		try(con){
+		try (con){
 		
 		final PreparedStatement statement = con.prepareStatement("UPDATE PRODUCTO SET " 
 				+ "NOMBRE = ? "
@@ -26,7 +26,7 @@ public class ProductoController {
 				+ ", CANTIDAD = ? "
 				+ " WHERE ID = ?");
 		
-		try(statement){
+		try (statement){
 		
         statement.setString(1, nombre);
 		statement.setString(2, descripcion);
@@ -46,7 +46,7 @@ public class ProductoController {
 	public int eliminar(Integer id) throws SQLException  {
 		final Connection con = new ConnectionFactory().recuperaConexion();
 		
-		try(con){
+		try (con){
 		final PreparedStatement statement = con.prepareStatement("DELETE FROM PRODUCTO WHERE ID = ?" );
 		
 		try (statement){
@@ -61,14 +61,14 @@ public class ProductoController {
 	public List<Map<String, String>> listar() throws SQLException {
 		final Connection con = new ConnectionFactory().recuperaConexion();
 		
-		try(con){
+		try (con){
 		
 		final PreparedStatement statement = con.prepareStatement("SELECT ID, NOMBRE, DESCRIPCION, CANTIDAD FROM PRODUCTO");
 		
-		try(statement){
+		try (statement){
 		statement.execute();
 		
-		ResultSet resultSet = statement.getResultSet();
+		 ResultSet resultSet = statement.getResultSet();
 		
 		List<Map<String, String>> resultado = new ArrayList<>();
 		
@@ -84,7 +84,8 @@ public class ProductoController {
 		
 		};
 		
-		return  resultado;
+		return resultado;
+		
 		}
 		}
 	}
@@ -98,14 +99,15 @@ public class ProductoController {
     	
     	
     final Connection con = new ConnectionFactory().recuperaConexion();
-    	try(con){
-    		con.setAutoCommit(false);}
+    
+    	try (con){
+    		con.setAutoCommit(false);
     	
-    	PreparedStatement statement = con.prepareStatement(
+    	final PreparedStatement statement = con.prepareStatement(
     	"INSERT INTO PRODUCTO (nombre, descripcion, cantidad)" 
     	+ "VALUES(?,?,?)", Statement.RETURN_GENERATED_KEYS);
     	
-    	try(statement){
+    	try (statement){
     	
     		do {
     			int cantidadParaGuardar = Math.min(cantidad, maximoCantidad);
@@ -122,7 +124,7 @@ public class ProductoController {
     	con.commit();
     	System.out.println("COMMIT");
     	
-    	} catch (SQLException e) {
+    	} catch (Exception e) {
     		//Está para que cuando ocurra un error no guarde nada. Es decir
     		// la transaccion o guarda todo o no guarda nada.
     		
@@ -131,7 +133,7 @@ public class ProductoController {
     		System.out.println("ROLLBACK");
     	}
     	
-    }
+    }}
     	
 
 
@@ -143,23 +145,12 @@ public class ProductoController {
 		statement.setInt(3, cantidad);
     	
 		statement.execute();
-    	/* EL try-with-recources se aplica para hacer el codigo aparte de mas corto 
-		nos ayuda a cerrar las aperturas que venimos haciendo en vez de poner ".close()" y en algun caso
-		 olvidarnos que se debia poner para no correr riesgos. */
-		
-		
-		// JAVA 7v try-with-resources
-		
-	/*	try(ResultSet resultSet1 = statement.getGeneratedKeys();){
-				while(resultSet1.next()) {
-						System.out.println(String.format("Fue incertado el producto de ID %d" ,
-								resultSet.getInt(1))); */   		
-
-		//JAVA 9v try-with-resources
+    
+		//JAVA 9v try-with-resources 
 		
     	final ResultSet resultSet = statement.getGeneratedKeys();
     	
-    	try(resultSet){
+    	try (resultSet){
 			while(resultSet.next()) {
 					System.out.println(String.format("Fue incertado el producto de ID %d" ,
 							resultSet.getInt(1)));
