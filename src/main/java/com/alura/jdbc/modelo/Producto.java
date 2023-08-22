@@ -9,8 +9,8 @@ public class Producto {
 	private String descripcion;
 
 	private Integer cantidad;
-	
-	
+
+	private Integer categoriaId;
 
 	public Producto(String nombre, String descripcion, Integer cantidad) {
 
@@ -31,6 +31,15 @@ public class Producto {
 
 	}
 
+	public Producto(Integer id, String nombre, Integer cantidad) {
+		
+		this.id = id;
+		this.nombre = nombre;
+		this.cantidad = cantidad;
+		
+		
+	}
+
 	public String getNombre() {
 		return nombre;
 	}
@@ -49,6 +58,14 @@ public class Producto {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+	
+	public int getCategoriaId() {
+		return this.categoriaId;
+	}
+
+	public void setCategoriaId(Integer categoriaId) {
+		this.categoriaId = categoriaId;
 	}
 
 	@Override
